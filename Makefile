@@ -5,7 +5,7 @@ app:
 	echo "logging in to docker registry"
 	docker login -u sumeshkanayi -p ${DOCKER_LOGIN_PASSWORD}
 	echo "tagging docker images"
-	docker tag mediawiki sumeshkanayi/media-wiki
+	docker tag mediawiki sumeshkanayi/media-wiki:dev
 	echo "pushing docker image"
 	docker push sumeshkanayi/media-wiki
 db:

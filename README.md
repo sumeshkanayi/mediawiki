@@ -38,12 +38,23 @@ export AWS_DEFAULT_REGION=us-west-2
 
   
 
-## Things to do
+## Wish list
 
+  
   
 
 - Good to have a mysql cluster (stateful set). - Not needed for this current usecase ,mediawiki is not super critical.
 
-- Certificates using Lets encrypt ot certificate manager
 - Versioning of docker images
+
 - A config map (I dont think its too important to carry env variables)
+
+- IAM config for AWS secrets
+
+- Separate namespace and service account
+
+- A side car custom prometheus exporter for mediawiki
+
+- Logging for mediawiki and maria db intergrated with opensearch
+-  SSL cert for mediawiki using aws cert manager and lets-encrypt
+- TLS between mediawiki and mysql https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/set-up-end-to-end-encryption-for-applications-on-amazon-eks-using-cert-manager-and-let-s-encrypt.html 

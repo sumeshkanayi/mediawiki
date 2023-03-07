@@ -1,4 +1,38 @@
 ---
+apiVersion: "kubernetes-client.io/v1"
+kind: ExternalSecret
+metadata:
+  name: mariadb
+spec:
+  backendType: secretsManager
+  region: us-west-2
+  dataFrom:
+    - mediawiki/mariadb
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: standard
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+reclaimPolicy: Retain
+mountOptions:
+  - debug
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mariadb
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi  
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,15 +59,50 @@ spec:
           image: sumeshknayi/mediawiki
           ports:
             - containerPort: 80
+          env:
+            - name: MYSQL_DATABASE
+              value: mediawiki
+            - name: MYSQL_USER
+              value: wiki
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MYSQL_ROOT_PASSWORD  
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MYSQL_PASSWORD  
+            - name: MYSQL_SERVER
+              value: {{MYSQL_CLUSTER_HOSTNAME}}                                                 
         - name: mariadb
           image: mariadb
           ports:
             - containerPort: 3306
           env:
             - name: MYSQL_DATABASE
-              value: MEDIAWIKI
+              value: mediawiki
             - name: MYSQL_USER
               value: wiki
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MYSQL_ROOT_PASSWORD  
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MYSQL_PASSWORD                   
+
+          volumeMounts:
+            - name: mariadb-persistent-storage
+              mountPath: /var/lib/mysql    
+      volumes:
+         - name: mariadb-persistent-storage
+           persistentVolumeClaim:
+            claimName: mariadb-pvc       
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
