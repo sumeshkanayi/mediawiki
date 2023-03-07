@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediawiki
+  labels:
+    app: mediawiki
+spec:
+  selector:
+    matchLabels:
+      app: mediawiki
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 3
+  template:
+    metadata:
+      labels:
+        app: mediawiki
+    spec:
+      containers:
+        - name: mediawiki
+          image: sumeshknayi/mediawiki:dev
+          ports:
+            - containerPort: 80
+        - name: mariadb
+          image: mariadb
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_DATABASE
+              value: MEDIAWIKI
+            - name: MYSQL_USER
+              value: wiki
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - web
+                topologyKey: kubernetes.io/hostname
